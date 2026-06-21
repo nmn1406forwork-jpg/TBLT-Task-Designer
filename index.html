@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TBLT Task Sequence Designer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+
+  :root {
+    --bg: #FAF9F7;
+    --surface: #FFFFFF;
+    --surface-2: #F3F4F6;
+    --teal: #2D7D78;
+    --teal-light: #EAF4F3;
+    --teal-mid: #4FA8A2;
+    --slate: #3B4A6B;
+    --slate-light: #EEF0F5;
+    --slate-mid: #6B7FA3;
+    --warm-border: #E5E2DC;
+    --text-primary: #1E2530;
+    --text-secondary: #5C6478;
+    --text-muted: #8E97AA;
+    --narrative: #3B6BB5;
+    --narrative-bg: #EEF3FB;
+    --problem: #B56B2D;
+    --problem-bg: #FBF2EA;
+    --infogap: #2D7D78;
+    --infogap-bg: #EAF4F3;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 4px rgba(30,37,48,0.08), 0 4px 16px rgba(30,37,48,0.04);
+    --shadow-card: 0 2px 8px rgba(30,37,48,0.10);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1.5px solid var(--warm-border);
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    gap: 16px;
+  }
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .logo-mark {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--teal);
+    letter-spacing: -0.3px;
+  }
+  .logo-sub {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── TABS ── */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: none;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    padding: 0 18px;
+    height: 60px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    position: relative;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    color: var(--teal);
+    border-bottom-color: var(--teal);
+  }
+  .tab-btn:hover:not(.active) { color: var(--slate); }
+  .repo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--teal);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 20px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    margin-left: 6px;
+    vertical-align: middle;
+    transition: opacity 0.2s;
+  }
+  .repo-badge[data-count="0"] { opacity: 0; }
+
+  /* ── MAIN ── */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── SECTION HEADING ── */
+  .section-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+  }
+
+  /* ── FORM FIELDS ── */
+  .inputs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 14px;
+    margin-bottom: 28px;
+    align-items: end;
+  }
+  @media (max-width: 640px) {
+    .inputs-row { grid-template-columns: 1fr; }
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.03em;
+  }
+  input[type="text"], select, textarea {
+    background: var(--surface);
+    border: 1.5px solid var(--warm-border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    width: 100%;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(45,125,120,0.12);
+  }
+  select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238E97AA' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  textarea { resize: vertical; min-height: 90px; line-height: 1.55; }
+
+  /* ── COMBO FIELD (target language item) ── */
+  .combo-wrapper {
+    position: relative;
+  }
+  .combo-wrapper input[type="text"] {
+    padding-right: 34px;
+  }
+  .combo-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .combo-toggle.open { transform: rotate(180deg); }
+  .combo-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1.5px solid var(--warm-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-card);
+    list-style: none;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 50;
+    display: none;
+    padding: 5px;
+  }
+  .combo-list.open { display: block; }
+  .combo-list li {
+    padding: 9px 11px;
+    font-size: 13.5px;
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    line-height: 1.4;
+  }
+  .combo-list li:hover,
+  .combo-list li.active-option {
+    background: var(--teal-light);
+    color: var(--teal);
+  }
+  .combo-list li.no-match {
+    color: var(--text-muted);
+    cursor: default;
+    font-style: italic;
+  }
+  .combo-list li.no-match:hover { background: none; color: var(--text-muted); }
+  .combo-list-divider {
+    padding: 6px 11px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ── TASK TYPE CARDS ── */
+  .task-type-heading {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.03em;
+    margin-bottom: 10px;
+  }
+  .task-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 600px) {
+    .task-cards { grid-template-columns: 1fr; }
+  }
+  .task-card {
+    background: var(--surface);
+    border: 2px solid var(--warm-border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .task-card:hover { border-color: var(--teal-mid); box-shadow: var(--shadow); }
+  .task-card.selected {
+    border-color: var(--teal);
+    background: var(--teal-light);
+    box-shadow: 0 0 0 1px var(--teal), var(--shadow);
+  }
+  .task-card-icon {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .task-card-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .task-card-desc {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ── GAMIFIED ACTIVITY TOGGLE ── */
+  .gamify-block {
+    margin-bottom: 24px;
+  }
+  .gamify-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1.5px solid var(--warm-border);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .gamify-toggle-row:hover {
+    border-color: var(--teal-mid);
+  }
+  .gamify-block:has(#gamifyToggle:checked) .gamify-toggle-row {
+    border-color: var(--teal);
+    background: var(--teal-light);
+  }
+  .gamify-toggle-row input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--teal);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .gamify-toggle-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .gamify-setting-field {
+    margin-top: 10px;
+    padding-left: 2px;
+    animation: panelIn 0.18s ease;
+  }
+
+  /* ── GAMIFICATION TECHNIQUES TIPS (static, always visible) ── */
+  .gamify-tips {
+    background: var(--teal-light);
+    border: 1.5px solid #BFE0DD;
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 24px;
+  }
+  .gamify-tips-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .gamify-tips-icon {
+    font-size: 15px;
+    line-height: 1;
+  }
+  .gamify-tips-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--teal);
+  }
+  .gamify-tips-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .gamify-tips-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .gamify-tips-list li {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.55;
+    padding-left: 18px;
+    position: relative;
+  }
+  .gamify-tips-list li::before {
+    content: '•';
+    position: absolute;
+    left: 4px;
+    color: var(--teal-mid);
+    font-weight: 700;
+  }
+  .gamify-tips-list strong {
+    color: var(--slate);
+    font-weight: 700;
+  }
+
+  /* ── TASK PANEL ── */
+  .task-panel {
+    background: var(--surface);
+    border: 1.5px solid var(--warm-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow);
+    animation: panelIn 0.2s ease;
+  }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .panel-section {
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--warm-border);
+  }
+  .panel-section:last-child { border-bottom: none; }
+  .panel-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  .rationale {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .rationale cite {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--slate);
+  }
+  .rationale em {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--teal);
+  }
+  .starter-prompts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .starter-prompt {
+    background: var(--surface-2);
+    border: 1px solid var(--warm-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  /* ── WRITE YOUR OWN ── */
+  .write-own {
+    background: var(--surface);
+    border: 1.5px solid var(--warm-border);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .write-own-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .write-own-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 18px;
+  }
+  .write-own .field { margin-bottom: 14px; }
+  .field-hint {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.5;
+    margin-top: -2px;
+    margin-bottom: 5px;
+    min-height: 1.1em;
+  }
+  .field-hint:empty { display: none; }
+
+  /* ── GAMIFIED ROOM INFO (scenario + unlock condition) ── */
+  .gamify-room-info {
+    background: var(--slate-light);
+    border: 1.5px solid #C5CCE0;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .gamify-room-badge {
+    display: inline-block;
+    background: var(--slate);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 99px;
+    padding: 3px 10px;
+    margin-bottom: 8px;
+  }
+  .gamify-scenario {
+    font-size: 13.5px;
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin-bottom: 6px;
+    font-style: italic;
+  }
+  .gamify-unlock {
+    font-size: 12.5px;
+    color: var(--slate);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .save-btn {
+    margin-top: 6px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 11px 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .save-btn:hover { background: #236963; }
+  .save-btn:active { transform: scale(0.98); }
+  .save-btn:disabled { background: var(--text-muted); cursor: not-allowed; }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text-primary);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 16px;
+    font-size: 13.5px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 1000;
+    pointer-events: none;
+    max-width: calc(100vw - 48px);
+    width: max-content;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .no-selection-notice {
+    background: var(--slate-light);
+    border: 1.5px dashed #C5CCE0;
+    border-radius: var(--radius);
+    padding: 28px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+  .no-selection-notice strong { display: block; margin-bottom: 4px; color: var(--text-secondary); font-size: 15px; }
+
+  /* ── GENERATE BUTTON ── */
+  .generate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    background: var(--slate);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px 22px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, opacity 0.15s;
+    margin-bottom: 8px;
+  }
+  .generate-btn:hover:not(:disabled) { background: #2C3854; }
+  .generate-btn:active:not(:disabled) { transform: scale(0.98); }
+  .generate-btn:disabled {
+    background: #C7CCD9;
+    cursor: not-allowed;
+  }
+  .generate-btn.loading svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .generate-hint {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+  .generate-hint.ready { color: var(--teal); font-weight: 500; }
+  .generate-hint.error-text { color: #CC4444; font-weight: 500; }
+
+  /* ── SKELETON LOADING ── */
+  .skeleton-panel {
+    background: var(--surface);
+    border: 1.5px solid var(--warm-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow);
+  }
+  .skeleton-section { padding: 20px 22px; border-bottom: 1px solid var(--warm-border); }
+  .skeleton-section:last-child { border-bottom: none; }
+  .skeleton-line {
+    height: 13px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--surface-2) 25%, #E9ECEF 37%, var(--surface-2) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    margin-bottom: 8px;
+  }
+  @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+  /* ── REPOSITORY ── */
+  .repo-empty {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--text-muted);
+  }
+  .repo-empty-icon { font-size: 40px; margin-bottom: 14px; }
+  .repo-empty-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text-secondary); margin-bottom: 6px; }
+  .repo-empty-text { font-size: 14px; line-height: 1.6; }
+
+  .repo-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .repo-card {
+    background: var(--surface);
+    border: 1.5px solid var(--warm-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    animation: panelIn 0.2s ease;
+  }
+  .repo-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--warm-border);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .repo-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .badge-narrative { background: var(--narrative-bg); color: var(--narrative); }
+  .badge-problem { background: var(--problem-bg); color: var(--problem); }
+  .badge-infogap { background: var(--infogap-bg); color: var(--infogap); }
+  .repo-card-topic {
+    font-weight: 600;
+    font-size: 14.5px;
+    color: var(--text-primary);
+  }
+  .repo-card-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+  .chip {
+    background: var(--surface-2);
+    border: 1px solid var(--warm-border);
+    border-radius: var(--radius-sm);
+    padding: 2px 9px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .chip-gamified {
+    background: var(--slate-light);
+    border-color: #C5CCE0;
+    color: var(--slate);
+    font-weight: 600;
+  }
+  .delete-btn {
+    background: none;
+    border: 1.5px solid #E5E2DC;
+    border-radius: var(--radius-sm);
+    padding: 6px 13px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .delete-btn:hover { border-color: #CC4444; color: #CC4444; background: #FFF5F5; }
+
+  .repo-card-body {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .repo-field-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 3px;
+  }
+  .repo-field-value {
+    font-size: 13.5px;
+    color: var(--text-primary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+  .checklist-items {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 13.5px;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+  .checklist-item::before {
+    content: '☐';
+    color: var(--teal-mid);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--warm-border);
+  }
+
+  /* ── VALIDATION ── */
+  .field-error {
+    font-size: 12px;
+    color: #CC4444;
+    margin-top: 3px;
+  }
+  input.error, textarea.error {
+    border-color: #CC4444;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-mark">TBLT Designer</span>
+      <span class="logo-sub">B1 Writing · Task Sequencer</span>
+    </div>
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="designer">Task Designer</button>
+      <button class="tab-btn" data-tab="repository">
+        Repository<span class="repo-badge" id="repoBadge" data-count="0">0</span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ══ TAB 1: DESIGNER ══ -->
+  <div class="tab-panel active" id="tab-designer">
+
+    <p class="section-label">Step 1</p>
+    <h1 class="section-title">Set your parameters</h1>
+    <p class="section-desc">Define the target language item, writing topic, and session duration before selecting a task type.</p>
+
+    <div class="inputs-row">
+      <div class="field combo-field">
+        <label for="targetLang">Target language item</label>
+        <div class="combo-wrapper">
+          <input type="text" id="targetLang" placeholder="e.g. past simple for narrative sequencing" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="targetLangList">
+          <button type="button" class="combo-toggle" id="comboToggle" aria-label="Show suggestions" tabindex="-1">
+            <svg width="11" height="7" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="#8E97AA" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <ul class="combo-list" id="targetLangList" role="listbox"></ul>
+        </div>
+      </div>
+      <div class="field combo-field">
+        <label for="writingTopic">Writing topic</label>
+        <div class="combo-wrapper">
+          <input type="text" id="writingTopic" placeholder="e.g. a memorable journey" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="writingTopicList">
+          <button type="button" class="combo-toggle" id="topicComboToggle" aria-label="Show suggestions" tabindex="-1">
+            <svg width="11" height="7" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="#8E97AA" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <ul class="combo-list" id="writingTopicList" role="listbox"></ul>
+        </div>
+      </div>
+      <div class="field">
+        <label for="duration">Duration</label>
+        <select id="duration">
+          <option value="30">30 min</option>
+          <option value="45" selected>45 min</option>
+          <option value="60">60 min</option>
+          <option value="90">90 min</option>
+        </select>
+      </div>
+    </div>
+
+    <p class="section-label">Step 2</p>
+    <p class="task-type-heading">Select a task type</p>
+    <div class="task-cards">
+      <div class="task-card" data-type="narrative" tabindex="0" role="button" aria-pressed="false">
+        <div class="task-card-icon">📖</div>
+        <div class="task-card-title">Narrative</div>
+        <div class="task-card-desc">Learners sequence events to tell a personal or imaginative story.</div>
+      </div>
+      <div class="task-card" data-type="problem" tabindex="0" role="button" aria-pressed="false">
+        <div class="task-card-icon">🧩</div>
+        <div class="task-card-title">Problem-solving</div>
+        <div class="task-card-desc">Learners analyse a situation and propose a reasoned solution or recommendation.</div>
+      </div>
+      <div class="task-card" data-type="infogap" tabindex="0" role="button" aria-pressed="false">
+        <div class="task-card-icon">🔄</div>
+        <div class="task-card-title">Information-gap</div>
+        <div class="task-card-desc">Learners exchange or reconstruct partial information to complete a shared task.</div>
+      </div>
+    </div>
+
+    <div class="gamify-block">
+      <label class="gamify-toggle-row" for="gamifyToggle">
+        <input type="checkbox" id="gamifyToggle">
+        <span class="gamify-toggle-label">Present as gamified activity (escape room)</span>
+      </label>
+      <div class="field gamify-setting-field" id="gamifySettingField" hidden>
+        <label for="gamifySetting">Escape room setting</label>
+        <input type="text" id="gamifySetting" placeholder="e.g. a museum, a spaceship, a school library">
+      </div>
+    </div>
+
+    <div class="gamify-tips">
+      <div class="gamify-tips-header">
+        <span class="gamify-tips-icon">💡</span>
+        <span class="gamify-tips-title">Gamification techniques to consider</span>
+      </div>
+      <p class="gamify-tips-sub">Whether or not you use the escape room format, these mechanics can add motivation to any task sequence:</p>
+      <ul class="gamify-tips-list">
+        <li><strong>Point systems</strong> — award points for completing each stage, using the target language correctly, or finishing within a time limit.</li>
+        <li><strong>Leaderboards</strong> — display team or individual rankings to add light competitive pressure across a class or multiple groups.</li>
+        <li><strong>Badges or rewards</strong> — give a small visual reward (a sticker, stamp, or digital badge) for unlocking each stage of the sequence.</li>
+        <li><strong>Timers</strong> — set a soft time limit per stage to build pace and urgency without penalising accuracy too heavily.</li>
+        <li><strong>Team roles</strong> — assign roles such as "clue keeper" or "writer" so every learner has a clear responsibility within the activity.</li>
+      </ul>
+    </div>
+
+    <button class="generate-btn" id="generateBtn" disabled>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.4 3.6L13 6.5l-3.6 1.4L8 11.5l-1.4-3.6L3 6.5l3.6-1.4L8 1.5Z" stroke="white" stroke-width="1.2" stroke-linejoin="round" fill="none"/><path d="M13 11l.7 1.8L15.5 13.5l-1.8.7L13 16l-.7-1.8-1.8-.7 1.8-.7L13 11Z" stroke="white" stroke-width="1" stroke-linejoin="round" fill="none"/></svg>
+      <span id="generateBtnLabel">Generate for this topic</span>
+    </button>
+    <p class="generate-hint" id="generateHint">Fill in the target language item and writing topic above, then select a task type, to generate content tailored to your inputs.</p>
+
+    <!-- Dynamic panel -->
+    <div id="taskPanelWrapper">
+      <div class="no-selection-notice">
+        <strong>Nothing generated yet</strong>
+        Complete Steps 1 and 2, then press Generate to see a pedagogical rationale and starter prompts written specifically for your topic and target language item.
+      </div>
+    </div>
+
+    <!-- Write your own -->
+    <div id="writeOwn" style="display:none;">
+      <p class="section-label">Step 3</p>
+      <div class="write-own">
+        <div class="write-own-title" id="writeOwnTitle">Write your task sequence</div>
+        <div class="write-own-sub" id="writeOwnSub">Draft each stage of the TBLT sequence for your specific context.</div>
+
+        <div class="field">
+          <label for="preTask"><span id="preTaskLabel">Your pre-task instruction</span></label>
+          <div class="gamify-room-info" id="preTaskGamifyInfo" hidden></div>
+          <p class="field-hint" id="preTaskHint"></p>
+          <textarea id="preTask" placeholder="e.g. Show students a photo of a crowded airport. Ask: 'Have you ever missed a flight or bus? What happened?' Take 3–4 examples. Tell students they will write a short story about a travel problem."></textarea>
+        </div>
+        <div class="field">
+          <label for="mainPrompt"><span id="mainPromptLabel">Your main writing prompt</span></label>
+          <div class="gamify-room-info" id="mainPromptGamifyInfo" hidden></div>
+          <p class="field-hint" id="mainPromptHint"></p>
+          <textarea id="mainPrompt" placeholder="e.g. Write a story (120–160 words) about a time when something went wrong on a journey. Use the past simple and past continuous to describe what was happening and what suddenly changed."></textarea>
+        </div>
+        <div class="field">
+          <label for="postChecklist"><span id="postChecklistLabel">Your post-task checklist</span> <span style="font-weight:400;color:var(--text-muted)">(one item per line)</span></label>
+          <div class="gamify-room-info" id="postChecklistGamifyInfo" hidden></div>
+          <p class="field-hint" id="postChecklistHint"></p>
+          <textarea id="postChecklist" placeholder="Used the past simple for completed actions&#10;Used the past continuous for background events&#10;Included a clear beginning, problem, and resolution&#10;Checked spelling and punctuation"></textarea>
+        </div>
+
+        <button class="save-btn" id="saveBtn">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 13V4.5L5 2h7.5a.5.5 0 0 1 .5.5v10a.5.5 0 0 1-.5.5H2.5A.5.5 0 0 1 2 13Z" stroke="white" stroke-width="1.3" fill="none"/><path d="M5 2v3.5h5V2M4.5 13v-4.5h6V13" stroke="white" stroke-width="1.3" fill="none"/></svg>
+          Save to Repository
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB 2: REPOSITORY ══ -->
+  <div class="tab-panel" id="tab-repository">
+    <p class="section-label">Saved sequences</p>
+    <h1 class="section-title">Task Repository</h1>
+    <p class="section-desc">All saved task sequences appear here. Use them as references or share with colleagues.</p>
+    <div id="repoContent"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────
+const TASK_DATA = {
+  narrative: {
+    title: 'Narrative',
+    icon: '📖',
+    badgeClass: 'badge-narrative',
+    modelText: `Last summer, I was travelling to my cousin's wedding when everything went wrong. I woke up late, so I rushed to the station without having breakfast. When I arrived, I realised I had left my ticket at home. I ran back as fast as I could, but the train had already left. I stood on the empty platform, feeling completely helpless. Then, a kind stranger offered to drive me to the next station. I arrived just in time — breathless, hungry, and wearing one odd shoe — but I made it to the wedding. My cousin still laughs about it today.`,
+    rationale: `Narrative tasks engage learners in purposeful written production by providing a clear communicative goal: to recount an event meaningfully for a reader (<cite>Ellis, 2003</cite>). Sequencing events in writing pushes learners to deploy tense systems and discourse connectors with communicative intent rather than in isolation (<cite>Willis & Willis, 2007</cite>). The personal stake inherent in narrative also promotes investment in form, which Long's interaction hypothesis links to more durable uptake of target forms (<cite>Long, 2015</cite>).`,
+    prompts: [
+      'Write about a time when you arrived somewhere very late. What happened? How did you feel? Use the past simple to sequence events clearly.',
+      'Tell the story of an unexpected event that changed your plans. Describe what was happening when the event occurred, using the past continuous for background.',
+      'Write a short story about a mistake you made that turned out well in the end. Include at least three past simple actions and a brief reflection at the end.'
+    ],
+    hints: {
+      preTask: 'Example: Read the model text and number the events in the order they happened.',
+      mainPrompt: 'Example: Write about a time when [event happened to you]. Say what happened first, next, and how it ended.',
+      postChecklist: 'Example: Did you tell the events in the order they happened? Did you use sequencing words like "then" and "after that"?'
+    }
+  },
+  problem: {
+    title: 'Problem-solving',
+    icon: '🧩',
+    badgeClass: 'badge-problem',
+    modelText: `Our neighbourhood has a serious litter problem. There are bins on every street, but people still drop rubbish on the ground. I think there are two main reasons for this. First, many people do not notice the bins because they are too small. Second, there are no signs asking people to keep the area clean. To solve the problem, the local council should install larger, brightly coloured bins and put up friendly reminder signs near popular areas. In addition, schools could organise a monthly clean-up day so that children learn to respect public spaces from an early age. If we work together, I believe we can make our neighbourhood cleaner and more pleasant for everyone.`,
+    rationale: `Problem-solving tasks require learners to evaluate, justify, and recommend — discourse functions that demand more complex grammatical resources than simple narration, thereby stretching productive competence (<cite>Ellis, 2003</cite>). Willis & Willis (2007) argue that reasoning tasks generate more varied and lexically dense output because learners must structure a logical argument for a reader who holds different information. Long (2015) notes that the meaning-negotiation embedded in solution-oriented writing mirrors real-world language use, increasing the ecological validity of the task and motivating more careful attention to form.`,
+    prompts: [
+      'Your school canteen only serves unhealthy food. Write an email to the head teacher explaining the problem and suggesting two or three practical solutions.',
+      'Many young people in your town spend too much time on social media. Write a short article for a school magazine discussing why this is a problem and what could be done about it.',
+      'A local park has been left in poor condition. Write a proposal for the town council suggesting improvements. Explain your reasons and prioritise your recommendations.'
+    ],
+    hints: {
+      preTask: 'Example: Read the model text and underline every connector that shows cause and effect.',
+      mainPrompt: 'Example: You are faced with [problem]. Write a clear explanation and propose two possible solutions.',
+      postChecklist: 'Example: Did you use at least two causal connectors? Did you propose more than one solution?'
+    }
+  },
+  infogap: {
+    title: 'Information-gap',
+    icon: '🔄',
+    badgeClass: 'badge-infogap',
+    modelText: `Hi Marta,\n\nThanks for your message. Here is the information I have about the conference. It starts on 14 March at 9 am and finishes at 5 pm. The venue is the Central Community Hall on Bridge Street. Lunch is provided, but participants need to bring their own notebooks.\n\nCould you tell me whether there is parking nearby? I also need to know if the registration fee includes the workshop in the afternoon. Please send me the programme as soon as you have it.\n\nLooking forward to seeing you there!\n\nBest wishes,\nLuca`,
+    rationale: `Information-gap tasks create genuine communicative need because each participant holds data the other requires, making exchange both purposeful and inevitable (<cite>Long, 2015</cite>). In a written format, the gap forces learners to request, clarify, and convey specific propositional content precisely — a condition Ellis (2003) identifies as central to task authenticity and learner investment. Willis & Willis (2007) highlight that the resulting texts are functionally motivated rather than display-oriented, which supports more natural deployment of target forms such as question formation, indirect speech, and hedging expressions.`,
+    prompts: [
+      'You are organising a group trip. Write an email to a classmate who has some of the details. Ask about the missing information (departure time, cost, what to bring) and share what you know.',
+      'You and a partner each have half the information about a new community centre. Write a short summary of the centre, including all the details. You will need to exchange information first.',
+      'Read the partial event flyer you have been given. Write a message to the event organiser asking for the missing details and confirming the information you already have.'
+    ],
+    hints: {
+      preTask: 'Example: Read the model text and highlight every piece of factual information it contains (dates, places, costs).',
+      mainPrompt: 'Example: You have half the details about [situation]. Write a message asking for the missing information and confirming what you already know.',
+      postChecklist: 'Example: Did you ask for every piece of missing information? Did you confirm the details you already had, with no facts left out?'
+    }
+  }
+};
+
+const TARGET_LANG_SUGGESTIONS = [
+  'past simple for narratives',
+  'first conditional for problem-solving',
+  'modal verbs for suggestions',
+  'connectors of sequence (first, then, after that)',
+  'causal connectors (because, therefore, so)',
+  'comparative and superlative forms',
+  'reported speech',
+  'passive voice for descriptions'
+];
+
+const WRITING_TOPIC_SUGGESTIONS = [
+  'planning a class trip',
+  'a lost item and how to find it',
+  'a misunderstanding with a friend',
+  'deciding between two job offers',
+  'a memorable travel experience'
+];
+
+// ─── SAFE STORAGE (falls back to in-memory if localStorage is blocked,
+// e.g. when this file is opened directly via file:// in some browsers) ───
+const safeStorage = (() => {
+  let memoryFallback = {};
+  let usingFallback = false;
+  try {
+    const testKey = '__tblt_storage_test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+  } catch (e) {
+    usingFallback = true;
+  }
+  return {
+    isFallback: usingFallback,
+    get(key) {
+      if (usingFallback) return memoryFallback[key] ?? null;
+      try { return localStorage.getItem(key); } catch (e) { return memoryFallback[key] ?? null; }
+    },
+    set(key, value) {
+      if (usingFallback) { memoryFallback[key] = value; return; }
+      try { localStorage.setItem(key, value); } catch (e) { memoryFallback[key] = value; }
+    }
+  };
+})();
+
+// ─── STATE ───────────────────────────────────────────────────────────
+let selectedType = null;
+let sequences = JSON.parse(safeStorage.get('tblt_sequences') || '[]');
+const targetLangInput = document.getElementById('targetLang');
+const writingTopicInput = document.getElementById('writingTopic');
+
+// ─── COMBO FIELD (reusable: text input + clickable suggestion list) ───
+function initComboField({ inputId, listId, toggleId, suggestions, suggestionsLabel }) {
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+  const toggle = document.getElementById(toggleId);
+  const wrapper = input.closest('.combo-wrapper');
+
+  function renderOptions(filterText) {
+    const filter = (filterText || '').trim().toLowerCase();
+    const matches = suggestions.filter(s => s.toLowerCase().includes(filter));
+
+    let html = `<li class="combo-list-divider">${escHtml(suggestionsLabel)}</li>`;
+    if (matches.length) {
+      html += matches.map(s => `<li role="option" data-value="${escHtml(s)}">${escHtml(s)}</li>`).join('');
+    } else {
+      html += `<li class="no-match">No matching suggestions — keep typing your own</li>`;
+    }
+    list.innerHTML = html;
+
+    list.querySelectorAll('li[data-value]').forEach(li => {
+      li.addEventListener('mousedown', e => {
+        // mousedown so it fires before input blur
+        e.preventDefault();
+        input.value = li.dataset.value;
+        close();
+        input.focus();
+      });
+    });
+  }
+
+  function open() {
+    renderOptions(input.value);
+    list.classList.add('open');
+    toggle.classList.add('open');
+    input.setAttribute('aria-expanded', 'true');
+  }
+
+  function close() {
+    list.classList.remove('open');
+    toggle.classList.remove('open');
+    input.setAttribute('aria-expanded', 'false');
+  }
+
+  input.addEventListener('focus', open);
+  input.addEventListener('input', () => {
+    input.classList.remove('error');
+    open();
+  });
+  toggle.addEventListener('click', () => {
+    if (list.classList.contains('open')) close();
+    else { open(); input.focus(); }
+  });
+  document.addEventListener('click', e => {
+    if (!wrapper.contains(e.target)) close();
+  });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') close();
+  });
+}
+
+initComboField({
+  inputId: 'targetLang',
+  listId: 'targetLangList',
+  toggleId: 'comboToggle',
+  suggestions: TARGET_LANG_SUGGESTIONS,
+  suggestionsLabel: 'Suggested target language items'
+});
+
+initComboField({
+  inputId: 'writingTopic',
+  listId: 'writingTopicList',
+  toggleId: 'topicComboToggle',
+  suggestions: WRITING_TOPIC_SUGGESTIONS,
+  suggestionsLabel: 'Suggested writing topics'
+});
+
+// ─── TABS ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'repository') renderRepo();
+  });
+});
+
+// ─── TASK CARDS ───────────────────────────────────────────────────────
+document.querySelectorAll('.task-card').forEach(card => {
+  card.addEventListener('click', () => selectTaskType(card.dataset.type));
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectTaskType(card.dataset.type); }
+  });
+});
+
+function selectTaskType(type) {
+  selectedType = type;
+  document.querySelectorAll('.task-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.type === type);
+    c.setAttribute('aria-pressed', c.dataset.type === type ? 'true' : 'false');
+  });
+  refreshGenerateReadiness();
+}
+
+// ─── GENERATE READINESS (Step 1 + Step 2 must both be complete) ───────
+const generateBtn = document.getElementById('generateBtn');
+const generateHint = document.getElementById('generateHint');
+
+function refreshGenerateReadiness() {
+  const gamifyOn = gamifyToggle.checked;
+  const gamifyReady = !gamifyOn || gamifySettingInput.value.trim();
+  const ready = targetLangInput.value.trim() && document.getElementById('writingTopic').value.trim() && selectedType && gamifyReady;
+  generateBtn.disabled = !ready || generateBtn.classList.contains('loading');
+  if (generateBtn.classList.contains('loading')) return;
+  if (ready) {
+    generateHint.textContent = 'Ready — press Generate to create content for this exact topic and target language item.';
+    generateHint.classList.add('ready');
+    generateHint.classList.remove('error-text');
+  } else if (gamifyOn && targetLangInput.value.trim() && document.getElementById('writingTopic').value.trim() && selectedType && !gamifySettingInput.value.trim()) {
+    generateHint.textContent = 'Add an escape room setting above to generate the gamified version.';
+    generateHint.classList.remove('ready');
+    generateHint.classList.remove('error-text');
+  } else {
+    generateHint.textContent = 'Fill in the target language item and writing topic above, then select a task type, to generate content tailored to your inputs.';
+    generateHint.classList.remove('ready', 'error-text');
+  }
+}
+
+targetLangInput.addEventListener('input', refreshGenerateReadiness);
+document.getElementById('writingTopic').addEventListener('input', refreshGenerateReadiness);
+
+// ─── GAMIFIED ACTIVITY TOGGLE ──────────────────────────────────────
+const gamifyToggle = document.getElementById('gamifyToggle');
+const gamifySettingField = document.getElementById('gamifySettingField');
+const gamifySettingInput = document.getElementById('gamifySetting');
+
+gamifyToggle.addEventListener('change', () => {
+  gamifySettingField.hidden = !gamifyToggle.checked;
+  if (!gamifyToggle.checked) gamifySettingInput.classList.remove('error');
+  refreshGenerateReadiness();
+});
+gamifySettingInput.addEventListener('input', () => {
+  gamifySettingInput.classList.remove('error');
+  refreshGenerateReadiness();
+});
+
+// ─── GENERATE (builds content from the typed topic and target language item) ─
+generateBtn.addEventListener('click', () => {
+  const targetLang = targetLangInput.value.trim();
+  const writingTopic = document.getElementById('writingTopic').value.trim();
+  const duration = document.getElementById('duration').value;
+  const gamified = gamifyToggle.checked;
+  const gamifySetting = gamifySettingInput.value.trim();
+  if (!targetLang || !writingTopic || !selectedType) { refreshGenerateReadiness(); return; }
+  if (gamified && !gamifySetting) { refreshGenerateReadiness(); return; }
+
+  setGenerateLoading(true);
+  showSkeleton();
+
+  // Brief delay so the loading state is visible and feels deliberate, even though
+  // generation itself is instant (no network call — runs fully offline).
+  setTimeout(() => {
+    try {
+      const data = generateTaskContent({ targetLang, writingTopic, duration, type: selectedType });
+      renderPanel(data);
+      applyWriteOwnFraming({ type: selectedType, topic: writingTopic, hints: data.hints, gamified, gamifySetting });
+      document.getElementById('writeOwn').style.display = 'block';
+      generateHint.textContent = gamified
+        ? 'Generated as an escape room set in "' + gamifySetting + '" — edit your own version below, or press Generate again for a fresh take.'
+        : 'Generated for "' + writingTopic + '" — edit your own version below, or press Generate again for a fresh take.';
+      generateHint.classList.add('ready');
+      generateHint.classList.remove('error-text');
+    } catch (err) {
+      console.error(err);
+      document.getElementById('taskPanelWrapper').innerHTML = `
+        <div class="no-selection-notice">
+          <strong>Generation failed</strong>
+          ${escHtml(err.message || 'Something went wrong while generating content. Please try again.')}
+        </div>`;
+      generateHint.textContent = 'Generation failed — please press Generate to try again.';
+      generateHint.classList.add('error-text');
+      generateHint.classList.remove('ready');
+    } finally {
+      setGenerateLoading(false);
+    }
+  }, 450);
+});
+
+function setGenerateLoading(isLoading) {
+  generateBtn.classList.toggle('loading', isLoading);
+  generateBtn.disabled = isLoading;
+  document.getElementById('generateBtnLabel').textContent = isLoading ? 'Generating…' : 'Generate for this topic';
+}
+
+function showSkeleton() {
+  document.getElementById('taskPanelWrapper').innerHTML = `
+    <div class="skeleton-panel">
+      <div class="skeleton-section">
+        <div class="skeleton-line" style="width:40%"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line" style="width:70%"></div>
+      </div>
+      <div class="skeleton-section">
+        <div class="skeleton-line" style="width:35%"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line" style="width:80%"></div>
+      </div>
+      <div class="skeleton-section">
+        <div class="skeleton-line" style="width:45%"></div>
+        <div class="skeleton-line" style="width:90%"></div>
+        <div class="skeleton-line" style="width:85%"></div>
+      </div>
+    </div>`;
+}
+
+// ─── AI CONTENT GENERATION ──────────────────────────────────────────
+// ─── OFFLINE TEMPLATE HELPERS ──────────────────────────────────────
+function lowerFirst(s) { return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
+function upperFirst(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+// Pull a short "grammar focus" label out of a free-typed target language item like
+// "past simple for narratives" → "past simple"
+function extractFocus(targetLang) {
+  const t = (targetLang || '').trim();
+  if (!t) return 'the target language';
+  const splitWords = [' for ', ' to ', ' when ', ' in '];
+  for (const w of splitWords) {
+    const idx = t.toLowerCase().indexOf(w);
+    if (idx > 2) return t.slice(0, idx).trim();
+  }
+  return t;
+}
+
+// ─── OFFLINE CONTENT GENERATION (deterministic, works without network) ─
+function generateTaskContent({ targetLang, writingTopic, duration, type }) {
+  const focus = extractFocus(targetLang);
+  const topic = lowerFirst(writingTopic.trim().replace(/\.$/, ''));
+
+  const builders = {
+    narrative: () => ({
+      rationale: `Narrative tasks ask learners to recount events connected to "${topic}" as a clear sequence, which gives <em>${focus}</em> a genuine communicative job rather than an isolated drill (<cite>Ellis, 2003</cite>). Because the writer must order events for a reader who doesn't yet know what happened, sequencing language is used purposefully, not mechanically (<cite>Willis & Willis, 2007</cite>). The personal stake in recounting real or invented experience also increases investment in getting the form right (<cite>Long 1996</cite>).`,
+      prompts: [
+        `Write about a time when ${topic}. Say what happened first, what happened next, and how it ended.`,
+        `Tell the story of someone experiencing "${topic}" from their point of view. Use ${focus} to make the sequence of events clear.`,
+        `Write a short diary entry about ${topic}, describing the events in the order they happened.`
+      ],
+      hints: {
+        preTask: `Example: Ask students to brainstorm the typical stages of ${topic} and put them in order before they start writing.`,
+        mainPrompt: `Example: Write about ${topic}. Say what happened first, next, and how it ended, using ${focus} throughout.`,
+        postChecklist: `Example: Did you tell the events in the order they happened? Did you use ${focus} correctly and include sequencing words like "then" and "after that"?`
+      }
+    }),
+    problem: () => ({
+      rationale: `Problem-solving tasks require learners to explain a situation, justify a view, and recommend a course of action — discourse functions that call on more complex resources, such as <em>${focus}</em>, than simple description (<cite>Ellis, 2003</cite>). Willis & Willis (2007) note that reasoning tasks like this produce more varied, lexically dense writing because learners must build a logical case for a reader. Long (1996) links this kind of meaning-focused reasoning to more durable uptake of the target form, since it is used to achieve a real communicative goal rather than for display.`,
+      prompts: [
+        `Describe a situation involving ${topic}. Explain the problem clearly and propose two possible solutions, using ${focus}.`,
+        `Write a short article discussing why ${topic} can be a problem, and what could realistically be done about it.`,
+        `Write a message to someone in authority about ${topic}. Explain the issue and recommend a specific course of action.`
+      ],
+      hints: {
+        preTask: `Example: Ask students to discuss in pairs what they already know about ${topic} and note down possible causes.`,
+        mainPrompt: `Example: You are faced with ${topic}. Write a clear explanation of the problem and propose two possible solutions, using ${focus}.`,
+        postChecklist: `Example: Did you use ${focus} at least twice? Did you propose more than one solution and justify your recommendation?`
+      }
+    }),
+    infogap: () => ({
+      rationale: `Information-gap tasks built around ${topic} create a genuine reason to communicate, since each writer holds part of the picture and needs the rest to complete it (<cite>Long 1996</cite>). This pushes learners to use ${focus} precisely when requesting or confirming specific details, because vague language would leave the gap unresolved — a condition Ellis (2003) identifies as central to task authenticity. Willis & Willis (2007) add that the resulting texts are functionally motivated rather than written for display, which supports more natural use of the target form.`,
+      prompts: [
+        `You and a partner each have half the details about ${topic}. Write a message asking for the missing information and confirming what you already know, using ${focus}.`,
+        `Write a short summary of ${topic} that includes every detail you have been given, leaving clear gaps for the information you still need to request.`,
+        `Read the partial information you have about ${topic}. Write a message to the person who has the rest, asking precise questions to complete the picture.`
+      ],
+      hints: {
+        preTask: `Example: Give each student half the details about ${topic} and ask them to list what information they still need.`,
+        mainPrompt: `Example: You have half the details about ${topic}. Write a message asking for the missing information and confirming what you already know, using ${focus}.`,
+        postChecklist: `Example: Did you ask for every piece of missing information about ${topic}? Did you confirm the details you already had, with no facts left out?`
+      }
+    })
+  };
+
+  const result = builders[type]();
+  result.type = type;
+  return result;
+}
+
+// ─── GAMIFICATION LAYER (escape room framing, wraps existing content only) ──
+// This never alters rationale/prompts/hints text itself — it only adds scenario
+// and unlock-condition metadata alongside the untouched original content, so
+// turning the toggle off always yields exactly the original output.
+function buildGamifiedRooms({ type, topic, setting, hints }) {
+  const place = (setting || '').trim() || 'a locked room';
+
+  const scenarioBuilders = {
+    narrative: {
+      room1: `As the doors of ${place} seal shut, a faded note appears: the only way out is to begin telling the story of ${topic} — and every detail must come in the right order.`,
+      room2: `Deeper inside ${place}, the next clue only reveals itself once the full story of ${topic} has been written, moment by moment, from start to end.`,
+      room3: `A final panel glows in ${place} — it will only unlock once the story has been checked from beginning to end, in the correct sequence.`
+    },
+    problem: {
+      room1: `An alarm sounds inside ${place}: something has gone wrong, and the team must first identify exactly what the problem with ${topic} really is before any door will open.`,
+      room2: `In the next chamber of ${place}, a console demands a written explanation of the problem and at least two possible solutions before it will grant access further in.`,
+      room3: `The final lock in ${place} only releases once the proposed solution has been checked and justified, with no weak reasoning left unexplained.`
+    },
+    infogap: {
+      room1: `Two teams wake up on opposite sides of ${place}, each holding only half the information about ${topic} — neither side alone can find the way out.`,
+      room2: `A shared terminal in ${place} will only accept a message that requests the missing details and confirms what each side already knows about ${topic}.`,
+      room3: `The exit of ${place} stays sealed until both sides confirm that every piece of information has been exchanged, with nothing left out.`
+    }
+  };
+
+  const unlockBuilders = {
+    narrative: {
+      room1: 'Unlock condition: students have planned or discussed the order of events before writing begins.',
+      room2: 'Unlock condition: the full narrative has been written with events in a clear, logical sequence.',
+      room3: 'Unlock condition: the checklist confirms the sequence and target language were used correctly.'
+    },
+    problem: {
+      room1: 'Unlock condition: the problem has been clearly identified and discussed before writing starts.',
+      room2: 'Unlock condition: the written response explains the problem and proposes more than one solution.',
+      room3: 'Unlock condition: the checklist confirms the solution is justified and the target language was used correctly.'
+    },
+    infogap: {
+      room1: 'Unlock condition: each side has identified what information they hold and what they are missing.',
+      room2: 'Unlock condition: a message has been written that both requests missing details and confirms known ones.',
+      room3: 'Unlock condition: the checklist confirms no information was left unexchanged.'
+    }
+  };
+
+  const scenarios = scenarioBuilders[type];
+  const unlocks = unlockBuilders[type];
+
+  return {
+    setting: place,
+    rooms: [
+      { roomLabel: 'Room 1: Entry', stageLabel: 'Pre-task instruction', scenario: scenarios.room1, unlock: unlocks.room1, hint: hints.preTask },
+      { roomLabel: 'Room 2: The Challenge', stageLabel: 'Main writing prompt', scenario: scenarios.room2, unlock: unlocks.room2, hint: hints.mainPrompt },
+      { roomLabel: 'Room 3: Final Unlock', stageLabel: 'Post-task checklist', scenario: scenarios.room3, unlock: unlocks.room3, hint: hints.postChecklist }
+    ]
+  };
+}
+
+function renderPanel(d) {
+  const safeRationale = sanitizeRationale(d.rationale);
+  const html = `
+    <div class="task-panel">
+      <div class="panel-section">
+        <div class="panel-section-label">Pedagogical rationale</div>
+        <p class="rationale">${safeRationale}</p>
+      </div>
+      <div class="panel-section">
+        <div class="panel-section-label">Starter prompts for reference</div>
+        <div class="starter-prompts">
+          ${d.prompts.map(p => `<div class="starter-prompt">${escHtml(p)}</div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('taskPanelWrapper').innerHTML = html;
+}
+
+function sanitizeRationale(text) {
+  // Escape everything, then selectively re-enable the small set of tags our own
+  // templates use (<cite> for citations, <em> for emphasis on the target language item).
+  let safe = escHtml(text);
+  safe = safe.replace(/&lt;cite&gt;/g, '<cite>').replace(/&lt;\/cite&gt;/g, '</cite>');
+  safe = safe.replace(/&lt;em&gt;/g, '<em>').replace(/&lt;\/em&gt;/g, '</em>');
+  return safe;
+}
+
+const PLAIN_LABELS = {
+  preTask: 'Your pre-task instruction',
+  mainPrompt: 'Your main writing prompt',
+  postChecklist: 'Your post-task checklist'
+};
+const PLAIN_TITLE = 'Write your task sequence';
+const PLAIN_SUB = 'Draft each stage of the TBLT sequence for your specific context.';
+
+function applyWriteOwnFraming({ type, topic, hints, gamified, gamifySetting }) {
+  // Always set the plain hint text first — this is the one part of each field
+  // that stays identical whether or not gamification is on.
+  document.getElementById('preTaskHint').textContent = hints.preTask || '';
+  document.getElementById('mainPromptHint').textContent = hints.mainPrompt || '';
+  document.getElementById('postChecklistHint').textContent = hints.postChecklist || '';
+
+  const infoBlocks = {
+    preTask: document.getElementById('preTaskGamifyInfo'),
+    mainPrompt: document.getElementById('mainPromptGamifyInfo'),
+    postChecklist: document.getElementById('postChecklistGamifyInfo')
+  };
+  const labels = {
+    preTask: document.getElementById('preTaskLabel'),
+    mainPrompt: document.getElementById('mainPromptLabel'),
+    postChecklist: document.getElementById('postChecklistLabel')
+  };
+
+  if (!gamified) {
+    // OFF state: output must look exactly as it does without gamification —
+    // plain labels, no room badges, no scenario, no unlock condition.
+    document.getElementById('writeOwnTitle').textContent = PLAIN_TITLE;
+    document.getElementById('writeOwnSub').textContent = PLAIN_SUB;
+    Object.keys(labels).forEach(key => { labels[key].textContent = PLAIN_LABELS[key]; });
+    Object.values(infoBlocks).forEach(el => { el.hidden = true; el.innerHTML = ''; });
+    return;
+  }
+
+  const gamifiedData = buildGamifiedRooms({ type, topic, setting: gamifySetting, hints });
+  document.getElementById('writeOwnTitle').textContent = 'Write your escape room sequence';
+  document.getElementById('writeOwnSub').textContent = `Set in ${gamifiedData.setting} — each stage below is one room learners must unlock in order.`;
+
+  const fieldKeys = ['preTask', 'mainPrompt', 'postChecklist'];
+  fieldKeys.forEach((key, i) => {
+    const room = gamifiedData.rooms[i];
+    labels[key].textContent = `${room.roomLabel} — ${room.stageLabel}`;
+    infoBlocks[key].hidden = false;
+    infoBlocks[key].innerHTML = `
+      <span class="gamify-room-badge">${escHtml(room.roomLabel)}</span>
+      <p class="gamify-scenario">${escHtml(room.scenario)}</p>
+      <p class="gamify-unlock">${escHtml(room.unlock)}</p>
+    `;
+  });
+}
+
+// ─── SAVE ─────────────────────────────────────────────────────────────
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const targetLang = document.getElementById('targetLang').value.trim();
+  const writingTopic = document.getElementById('writingTopic').value.trim();
+  const duration = document.getElementById('duration').value;
+  const preTask = document.getElementById('preTask').value.trim();
+  const mainPrompt = document.getElementById('mainPrompt').value.trim();
+  const postChecklist = document.getElementById('postChecklist').value.trim();
+
+  // Validate
+  let valid = true;
+  [['targetLang', targetLang], ['writingTopic', writingTopic], ['preTask', preTask], ['mainPrompt', mainPrompt]].forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (!val) { el.classList.add('error'); valid = false; }
+    else el.classList.remove('error');
+  });
+  if (!selectedType) { showToast('Please select a task type first.'); return; }
+  if (!valid) { showToast('Please fill in all required fields.'); return; }
+
+  const seq = {
+    id: Date.now(),
+    type: selectedType,
+    typeLabel: TASK_DATA[selectedType].title,
+    badgeClass: TASK_DATA[selectedType].badgeClass,
+    topic: writingTopic,
+    duration: duration + ' min',
+    targetLang,
+    preTask,
+    mainPrompt,
+    checklist: postChecklist.split('\n').map(s => s.trim()).filter(Boolean),
+    gamified: gamifyToggle.checked,
+    gamifySetting: gamifyToggle.checked ? gamifySettingInput.value.trim() : '',
+    savedAt: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  };
+
+  sequences.unshift(seq);
+  saveToStorage();
+  updateBadge();
+  showToast('✓ Sequence saved to Repository');
+  // Reset write fields
+  ['preTask','mainPrompt','postChecklist'].forEach(id => document.getElementById(id).value = '');
+});
+
+function saveToStorage() {
+  safeStorage.set('tblt_sequences', JSON.stringify(sequences));
+}
+
+// ─── REPOSITORY ───────────────────────────────────────────────────────
+function renderRepo() {
+  const el = document.getElementById('repoContent');
+  if (!sequences.length) {
+    el.innerHTML = `
+      <div class="repo-empty">
+        <div class="repo-empty-icon">📂</div>
+        <div class="repo-empty-title">No saved sequences yet</div>
+        <div class="repo-empty-text">Design one in the Task Designer tab — your work will appear here.</div>
+      </div>`;
+    return;
+  }
+  el.innerHTML = `<div class="repo-grid">${sequences.map(s => repoCardHTML(s)).join('')}</div>`;
+  el.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteSeq(Number(btn.dataset.id)));
+  });
+}
+
+function repoCardHTML(s) {
+  const checklist = s.checklist.length
+    ? `<div class="checklist-items">${s.checklist.map(i => `<div class="checklist-item">${escHtml(i)}</div>`).join('')}</div>`
+    : '<span style="color:var(--text-muted);font-size:13px;">No checklist items.</span>';
+
+  const gamified = !!s.gamified;
+  const rooms = gamified
+    ? buildGamifiedRooms({ type: s.type, topic: s.topic, setting: s.gamifySetting, hints: {} }).rooms
+    : null;
+
+  const gamifyChip = gamified
+    ? `<span class="chip chip-gamified">🔒 Escape room: ${escHtml(s.gamifySetting || 'a locked room')}</span>`
+    : '';
+
+  const bodyContent = gamified ? `
+        <div>
+          <span class="gamify-room-badge">${escHtml(rooms[0].roomLabel)}</span>
+          <p class="gamify-scenario">${escHtml(rooms[0].scenario)}</p>
+          <div class="repo-field-label" style="margin-top:8px;">Pre-task instruction</div>
+          <div class="repo-field-value">${escHtml(s.preTask)}</div>
+        </div>
+        <hr class="divider">
+        <div>
+          <span class="gamify-room-badge">${escHtml(rooms[1].roomLabel)}</span>
+          <p class="gamify-scenario">${escHtml(rooms[1].scenario)}</p>
+          <div class="repo-field-label" style="margin-top:8px;">Main writing prompt</div>
+          <div class="repo-field-value">${escHtml(s.mainPrompt)}</div>
+        </div>
+        <hr class="divider">
+        <div>
+          <span class="gamify-room-badge">${escHtml(rooms[2].roomLabel)}</span>
+          <p class="gamify-scenario">${escHtml(rooms[2].scenario)}</p>
+          <div class="repo-field-label" style="margin-top:8px;">Post-task checklist</div>
+          ${checklist}
+        </div>` : `
+        <div>
+          <div class="repo-field-label">Pre-task instruction</div>
+          <div class="repo-field-value">${escHtml(s.preTask)}</div>
+        </div>
+        <hr class="divider">
+        <div>
+          <div class="repo-field-label">Main writing prompt</div>
+          <div class="repo-field-value">${escHtml(s.mainPrompt)}</div>
+        </div>
+        <hr class="divider">
+        <div>
+          <div class="repo-field-label">Post-task checklist</div>
+          ${checklist}
+        </div>`;
+
+  return `
+    <div class="repo-card" data-id="${s.id}">
+      <div class="repo-card-header">
+        <div>
+          <div class="repo-card-meta">
+            <span class="badge ${s.badgeClass}">${s.typeLabel}</span>
+            <span class="repo-card-topic">${escHtml(s.topic)}</span>
+          </div>
+          <div class="repo-card-chips" style="margin-top:6px;">
+            <span class="chip">⏱ ${s.duration}</span>
+            <span class="chip">🎯 ${escHtml(s.targetLang)}</span>
+            <span class="chip">📅 ${s.savedAt}</span>
+            ${gamifyChip}
+          </div>
+        </div>
+        <button class="delete-btn" data-id="${s.id}">Delete</button>
+      </div>
+      <div class="repo-card-body">${bodyContent}
+      </div>
+    </div>`;
+}
+
+function deleteSeq(id) {
+  sequences = sequences.filter(s => s.id !== id);
+  saveToStorage();
+  updateBadge();
+  renderRepo();
+  showToast('Sequence deleted');
+}
+
+function updateBadge() {
+  const badge = document.getElementById('repoBadge');
+  badge.textContent = sequences.length;
+  badge.dataset.count = sequences.length;
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimeout;
+function showToast(msg, duration) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), duration || 2800);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────
+updateBadge();
+if (safeStorage.isFallback) {
+  setTimeout(() => showToast('Your browser is blocking saved storage for this file — sequences will work but won\'t be kept after you close the page.', 6000), 600);
+}
+</script>
+</body>
+</html>
